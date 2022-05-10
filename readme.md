@@ -5,4 +5,4 @@ Chat Page Demo:
 
 <br/>
 ### ERD:
-<img src="https://github.com/mHeydari3/chatProject/blob/main/erd.png" />
+<img src="https://github.com/mHeydari3/chatProject/blob/main/erd(updated).png" />
