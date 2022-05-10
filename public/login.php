@@ -1,6 +1,13 @@
 <?php
 session_start();
 include "../messages.php";
+include_once  "../helper/db.php";
+require_once "../helper/functions.php";
+
+if(!defined("config")){
+    define( "config" , require __DIR__ . '/../config.php');
+}
+
 
 $json_url = "../users/users.json";
 $json = file_get_contents($json_url);
@@ -14,23 +21,23 @@ if(isset($_POST)){
 
         $isLogined = 0;
 
-        foreach($jsonArray as $item){
-            if(
-               $username == $item['username'] && 
-               $password == $item['password']
-              ){
+        
+        $result = doLogin($username, $password);
+
+        
+            if($result){
                 $isLogined = 1;
                 $_SESSION['username'] = $username;
-                if (isset($item['permission'])){
-                    if ($item['permission'] == "admin"){
+                if (isset($result['permission'])){
+                    if ($result['permission'] == "admin"){
                         $_SESSION['permission'] = "admin";
                     }
                 }
-                break;
+                
             }else{
                 $loginIncorrect = 1;
             }
-        }
+        
 
         
 

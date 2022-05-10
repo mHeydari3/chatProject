@@ -219,7 +219,7 @@ $(function(){
 
     
 
-    //setInterval(showAllMessages, 1000);
-    setTimeout(showAllMessages,1000);
+    setInterval(showAllMessages, 1000);
+    //setTimeout(showAllMessages,1000);
     //showAllMessages();
 })

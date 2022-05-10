@@ -1,4 +1,10 @@
 <?php
+require_once "db.php";
+require_once "dbFunctions.php";
+require_once "jsonFunctions.php";
+if(!defined("config")){
+    define( "config" , require __DIR__ . '/../config.php');
+}
 function logout(){
     session_unset();
     header('Location: login.php');
@@ -6,10 +12,13 @@ function logout(){
 }
 
 function isUserUnique($username){
-    $json_url = "../users/users.json";
-    $json = file_get_contents($json_url);
-    $jsonArray = json_decode($json,true);
-    foreach($jsonArray as $item){
+    
+    $DB = new DB();
+    $sql = "SELECT * FROM users WHERE username='$username' ";
+    $result = $DB->selectQuery($sql);
+
+
+    foreach($result as $item){
         if( $username == $item['username'] ){
 
             return false; // username is already picked by someone else and is not unique
@@ -19,10 +28,13 @@ function isUserUnique($username){
 }
 
 function isEmailUnique($email){
-    $json_url = "../users/users.json";
-    $json = file_get_contents($json_url);
-    $jsonArray = json_decode($json,true);
-    foreach($jsonArray as $item){
+    
+    $DB = new DB();
+    $sql = "SELECT * FROM users WHERE email='$email' ";
+    $result = $DB->selectQuery($sql);
+
+
+    foreach($result as $item){
         if( $email == $item['email'] ){
 
             return false; // email is already used by someone else and is not unique
@@ -57,10 +69,22 @@ function isPass($pass){
     return false;
 }
 
-function returnJsonContent($url){
-    $json_url = $url;
-    $json = file_get_contents($json_url);
+function returnJsonContentMessages(){
+
+    if(config['STORAGE']['PREFERED_OPTION'] == "JSON"){
+        $json = returnMessageJSON();
+    }else if(config['STORAGE']['PREFERED_OPTION']== "DB"){
+        $result = returnMessageTBL();
+        $json = json_encode($result , true);
+    }
+
+    
+    
+    
+    /* var_dump($json); */
+    /* return ""; */
     return $json;
+    
 }
 
 function regroupArray($oldArray){
@@ -73,73 +97,57 @@ function regroupArray($oldArray){
 
 }
 
-function insertDataToJson($data, $url){
+function InsertNewMessage($data){
     
     require_once "jdf.php";
     
 
     extract($data);
-    
-    $json_url = $url;
-    $json = file_get_contents($json_url);
-    $jsonArray = json_decode($json,true);
-    $jsonArray[] = [
-        'id'          => count($jsonArray)+1 ,
-        'sender'      => $username,
-        'text_message'=> $text,
-        'date'        => jdate('Y/n/j') . " " . jdate('H:i:s')
-        ];
 
-    if (isset($data['image_src']) ) {
-        $lastIndex = count( $jsonArray ) - 1;
-        $jsonArray[$lastIndex]["image_src"] = $data['image_src'];
-        
+    if(config['STORAGE']['PREFERED_OPTION']== "JSON"){
+        $result = insertNewMessageJSON($username , $text , $data);
+    }else if(config['STORAGE']['PREFERED_OPTION']== "DB"){
+        $result = InsertNewMessageTBL($username,$text,$data);
     }
-    print_r($jsonArray[count($jsonArray)-1]);
-    file_put_contents($json_url,json_encode($jsonArray,JSON_PRETTY_PRINT));
+
+    
+    return $result;
 }
 
-function updateMessage( $username , $text , $message_id  , $url){
+function updateMessage( $username , $text , $message_id  ){
     
     require_once "jdf.php";
-    $json_url = $url;
-    $json = file_get_contents($json_url);
-    $jsonArray = json_decode($json,true);
-    foreach($jsonArray as $key => $arrayItem){
-        
-        if ($jsonArray[$key]['id'] == $message_id){
-            echo "id foundout";
-            $jsonArray[$key]['text_message'] = $text;
-            $jsonArray[$key]['date'] = jdate('Y/n/j') . " " . jdate('H:i:s');
-
-            print_r($jsonArray[$key]);
-        } 
-
-
-    }
-    echo "<br/>file updated!";
     
-    file_put_contents($json_url,json_encode($jsonArray,JSON_PRETTY_PRINT));
+    
+    if(config['STORAGE']['PREFERED_OPTION']== "JSON"){
+        $result = updateMessageJSON($message_id ,$text );
+    }else if(config['STORAGE']['PREFERED_OPTION']== "DB"){
+        $result = updateMessagesTBL($message_id, $text);
+    }
+
+
+    
+
+    echo "<br/>db updated!";
+    
     
 }
 
-function deleteMessage($message_id, $url){
-    $json_url = $url;
-    $json = file_get_contents($json_url);
-    $jsonArray = json_decode($json,true);
-    
-    for($i = 0 ; $i < count($jsonArray) ; $i++){
-        
-        if ($jsonArray[$i]['id'] == $message_id){
-            unset($jsonArray[$i]);
-        }
+function deleteMessage($message_id){
+
+
+    if(config['STORAGE']['PREFERED_OPTION']== "JSON"){
+        $result = deleteMessageJSON($message_id);
+    }else if(config['STORAGE']['PREFERED_OPTION']== "DB"){
+        $result = deleteMessageTBL($message_id);
     }
+
     
 
-    echo "message successfully deleted!";
-    
-    file_put_contents($json_url,json_encode(regroupArray($jsonArray),JSON_PRETTY_PRINT));
-    
+    if($result){
+        echo "message successfully deleted!";
+    }
+        
 }
 
 
@@ -152,10 +160,21 @@ function uploadFile($data){
     }
     else {
         move_uploaded_file($_FILES['file']['tmp_name'], "../users/uploads/$username" . '_' . $_FILES['file']['name']);
+        
         return "../users/uploads/$username" . '_' . $_FILES['file']['name'];
     }
 
 
+}
+
+function doLogin($username , $password){
+    if(config['STORAGE']['PREFERED_OPTION']== "JSON"){
+        $result = checkUserinJSON($username , $password);
+    }else if(config['STORAGE']['PREFERED_OPTION']== "DB"){
+        $result = checkUserinDB($username, $password);
+    }
+
+    return $result;
 }
 
 ?>
