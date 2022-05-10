@@ -7,7 +7,7 @@ return [
         'password' => ''
     ],
     'STORAGE' => [
-        "PREFERED_OPTION" => "DB", // currect value = DB | JSON
+        "PREFERED_OPTION" => "JSON", // currect value = DB | JSON
         "JSON_FILE_PATH" => "../message/message.json",
         "USERS_FILE_PATH" => "../users/users.json"
     ]
